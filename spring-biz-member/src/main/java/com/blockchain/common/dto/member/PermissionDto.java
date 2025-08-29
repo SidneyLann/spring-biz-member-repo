@@ -4,11 +4,6 @@ import java.util.List;
 
 import com.blockchain.common.base.RootDto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 public class PermissionDto extends RootDto {
   private Long userId;
 

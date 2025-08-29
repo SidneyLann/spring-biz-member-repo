@@ -2,9 +2,6 @@ package com.blockchain.common.base;
 
 import java.util.List;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 public class RootDto implements java.io.Serializable {
   private Long id;
 

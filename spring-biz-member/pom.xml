@@ -206,12 +206,6 @@
 			<version>2.2.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
-			<version>2.2.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 		</dependency>
@@ -260,11 +254,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-quartz</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.pcng.ebusiness</groupId>
-			<artifactId>pcng-base-data</artifactId>
-			<version>0.1.9</version>
-		</dependency>
 	</dependencies>
 
 
@@ -276,46 +265,6 @@
 				<groupId>com.querydsl</groupId>
 				<artifactId>querydsl-maven-plugin</artifactId>
 				<version>5.1.0</version>
-				<executions>
-					<execution>
-						<id>generate-eb_dev</id>
-						<goals>
-							<goal>export</goal>
-						</goals>
-						<configuration>
-							<jdbcDriver>com.mysql.cj.jdbc.Driver</jdbcDriver>
-							<jdbcUrl>jdbc:mysql://of.pc168.com:4528/eb_dev?nullCatalogMeansCurrent=true</jdbcUrl>
-							<jdbcUser>us_eb_8</jdbcUser>
-							<jdbcPassword>P^sswr0d@us</jdbcPassword>
-							<targetFolder>target/generated-sources</targetFolder>
-							<exportTables>true</exportTables>
-							<exportViews>false</exportViews>
-							<packageName>com.pcng.base.data</packageName>
-							<lowerCase>true</lowerCase>
-							<schemaToPackage>false</schemaToPackage>
-							<tableNamePattern>lgs_region,lgs_delivery_receipt_address,lgs_freight_template,lgs_freight_detail,lgs_freight_detail_region</tableNamePattern>
-						</configuration>
-					</execution>
-					<execution>
-						<id>generate-eb_dev2</id>
-						<goals>
-							<goal>export</goal>
-						</goals>
-						<configuration>
-							<jdbcDriver>com.mysql.cj.jdbc.Driver</jdbcDriver>
-							<jdbcUrl>jdbc:mysql://of.pc168.com:4528/eb_dev2?nullCatalogMeansCurrent=true</jdbcUrl>
-							<jdbcUser>us_eb_8</jdbcUser>
-							<jdbcPassword>P^sswr0d@us</jdbcPassword>
-							<targetFolder>target/generated-sources</targetFolder>
-							<exportTables>true</exportTables>
-							<exportViews>false</exportViews>
-							<packageName>com.pcng.base.data</packageName>
-							<lowerCase>true</lowerCase>
-							<schemaToPackage>false</schemaToPackage>
-							<tableNamePattern>mkt_map_info,mkt_customer_location,mkt_customer_visit</tableNamePattern>
-						</configuration>
-					</execution>
-				</executions>
 				<dependencies>
 					<dependency>
 						<groupId>com.mysql</groupId>

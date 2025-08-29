@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -22,7 +23,6 @@ import com.blockchain.base.data.DataBaseController;
 import com.blockchain.common.base.OpResult;
 import com.blockchain.common.constants.CacheKeys;
 import com.blockchain.common.dto.member.MemberDto;
-import com.blockchain.common.dto.member.PermissionDto;
 import com.blockchain.common.path.MemberPaths;
 import com.blockchain.common.values.CommonValues;
 import com.blockchain.common.values.MbValues;
@@ -42,7 +42,7 @@ public class MemberController extends DataBaseController {
   protected CacheClient cacheClient;
   private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(11);
 
-  @PostMapping(path = MemberPaths.MEMBER_INIT)
+  @GetMapping(path = MemberPaths.MEMBER_INIT)
   public OpResult init(@RequestHeader(required = false) Long memberId, @RequestHeader(required = false) Long orgId, @RequestHeader(required = false) Short orgType,
       @RequestHeader(required = false) String authorities, @RequestParam(name = "apiType", required = false, defaultValue = "1") int apiType) {
     OpResult opResult = new OpResult();
@@ -52,6 +52,7 @@ public class MemberController extends DataBaseController {
       initMap.put("formJs", this.genFormJs(Member.class, apiType));
       opResult.setBody(initMap);
       opResult.setCode(OpResult.CODE_COMM_0_SUCCESS);
+      LOG.debug( "pw: {}", passwordEncoder.encode("P@ssw0rd"));
     } catch (JpaSystemException e) {
       Throwable t = e.getRootCause();
       this.handleJpaSystemException(t, opResult);

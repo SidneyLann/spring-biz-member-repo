@@ -17,7 +17,7 @@ import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 
 @Configuration
-@EnableJpaRepositories(basePackages = "com.pcng", repositoryBaseClass = BaseDao.class)
+@EnableJpaRepositories(basePackages = "com.blockchain", repositoryBaseClass = BaseDao.class)
 public class BaseDataConfig {
   @Resource
   private DataSource dataSource;
