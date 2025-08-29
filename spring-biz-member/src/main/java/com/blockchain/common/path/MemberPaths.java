@@ -26,5 +26,4 @@ public class MemberPaths {
   public static final String PERMISSIN_MB_LOAD = "/member/pub/permission/mb/load/search";
   public static final String PERMISSIN_MB_SEARCH = "/member/pub/permission/mb/search";
 
-
 }
