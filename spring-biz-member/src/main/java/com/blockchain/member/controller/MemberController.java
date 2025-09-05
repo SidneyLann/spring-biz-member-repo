@@ -69,7 +69,7 @@ import jakarta.validation.constraints.NotNull;
  * 
  * @author Blockchain Team
  * @version 1.0
- * @since 2023
+ * @since 2025
  */
 @RestController
 @RequestMapping(MemberPaths.MEMBER_BASE)
