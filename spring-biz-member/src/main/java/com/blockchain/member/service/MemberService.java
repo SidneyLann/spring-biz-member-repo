@@ -1,17 +1,29 @@
+/*
+*  ******************************************************************************
+*  *
+*  *
+*  * This program and the accompanying materials are made available under the
+*  * terms of the Apache License, Version 2.0 which is available at
+*  * https://www.apache.org/licenses/LICENSE-2.0.
+*  *
+*  *  See the NOTICE file distributed with this work for additional
+*  *  information regarding copyright ownership.
+*  * Unless required by applicable law or agreed to in writing, software
+*  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+*  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+*  * License for the specific language governing permissions and limitations
+*  * under the License.
+*  *
+*  * SPDX-License-Identifier: Apache-2.0
+*  *****************************************************************************
+*/
+
 package com.blockchain.member.service;
-
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import com.blockchain.base.IBaseService;
 import com.blockchain.base.data.DataBaseService;
 import com.blockchain.common.dto.member.DefaultPermissionDto;
 import com.blockchain.common.dto.member.MemberDto;
-import com.blockchain.common.dto.member.PermissionDto;
 import com.blockchain.common.util.DateUtil;
 import com.blockchain.common.values.CommonValues;
 import com.blockchain.member.dao.MemberDao;
@@ -20,171 +32,435 @@ import com.blockchain.member.entity.Member;
 import com.blockchain.member.entity.QMember;
 import com.blockchain.member.entity.SubjectPermission;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
-
 import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Service implementation for member management operations. Provides CRUD
+ * operations, search functionality, and permission management for members.
+ * 
+ * @author Blockchain Team
+ * @version 1.0
+ * @since 2023
+ */
 @Service
+@Transactional(readOnly = true)
 public class MemberService extends DataBaseService implements IBaseService<Member, Long> {
-  private static final Logger LOG = LoggerFactory.getLogger(MemberService.class);
-  @Resource
-  private MemberDao memberDao;
-  @Resource
-  private DefaultPermissionService defaultPermissionService;
-  @Resource
-  private SubjectPermissionService subjectPermissionService;
 
-  @Override
-  @Transactional(transactionManager = "transactionManager", rollbackFor = Exception.class)
-  public Member save(Member member) {
-    if (member.getWeId() != null) {
-      QMember queryEntity = QMember.member;
-      BooleanBuilder whereBuilder = new BooleanBuilder();
-      whereBuilder.and(queryEntity.weId.eq(member.getWeId()));
-      jpaQuery.update(queryEntity).set(queryEntity.weId, 0l).where(whereBuilder).execute();
-    }
+	private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
 
-    DefaultPermissionDto dto = new DefaultPermissionDto();
-    dto.setOrgType(CommonValues.ORG_TYPE_MB);
-    List<DefaultPermission> defaultPermissions = defaultPermissionService.search(dto);
-    for (DefaultPermission defaultPermission : defaultPermissions) {
-      SubjectPermission memberPermission = new SubjectPermission();
-      memberPermission.setId(idGenerator.genId());
-      memberPermission.setOrgType(CommonValues.ORG_TYPE_MB);
-      memberPermission.setUserId(member.getId());
-      memberPermission.setPermissionId(defaultPermission.getId());
-      subjectPermissionService.save(memberPermission);
-    }
+	// Sort column constants (using bitmask values)
+	public static final int SORT_BY_ID = 1;
+	public static final int SORT_BY_LOGIN_NAME = 2;
+	public static final int SORT_BY_NICK_NAME = 4;
+	public static final int SORT_BY_CREATE_TIME = 8;
+	public static final int SORT_BY_ORG_ID = 16;
+	public static final int SORT_BY_ORG_TYPE = 32;
+	public static final int SORT_BY_EMAIL = 64;
+	public static final int SORT_BY_PHONE = 128;
 
-    return memberDao.save(member);
-  }
+	@Resource
+	private MemberDao memberDao;
 
-  @Transactional(transactionManager = "transactionManager", rollbackFor = Exception.class)
-  public Member update(Member member) {
-    return memberDao.save(member);
-  }
+	@Resource
+	private DefaultPermissionService defaultPermissionService;
 
-  @Transactional(transactionManager = "transactionManager", rollbackFor = Exception.class)
-  public int resetPassword(Long id, String newPassword) {
-    QMember queryEntity = QMember.member;
-    BooleanBuilder whereBuilder = new BooleanBuilder();
-    whereBuilder.and(queryEntity.id.eq(id));
+	@Resource
+	private SubjectPermissionService subjectPermissionService;
 
-    Long result = jpaQuery.update(queryEntity).set(queryEntity.password, newPassword).where(whereBuilder).execute();
+	/**
+	 * Saves a new member with default permissions. Ensures WeId uniqueness by
+	 * resetting WeId for any existing member with the same WeId.
+	 *
+	 * @param member the member entity to save
+	 * @return the saved member entity
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public Member save(Member member) {
+		logger.debug("Saving member with loginName: {}", member.getLoginName());
 
-    return result.intValue();
-  }
+		// Ensure WeId uniqueness
+		if (member.getWeId() != null) {
+			resetWeIdForExistingMembers(member.getWeId());
+		}
 
+		// Assign default permissions
+		assignDefaultPermissions(member);
 
-  @Transactional(transactionManager = "transactionManager", rollbackFor = Exception.class)
-  public int delete(List<Long> ids) {
-    QMember queryEntity = QMember.member;
-    BooleanBuilder whereBuilder = new BooleanBuilder();
-    whereBuilder.and(queryEntity.id.in(ids));
-    whereBuilder.and(queryEntity.status.eq(CommonValues.ACTION_DELETED));
-    Long result = jpaQuery.delete(queryEntity).where(whereBuilder).execute();
+		return memberDao.save(member);
+	}
 
-    whereBuilder = new BooleanBuilder();
-    whereBuilder.and(queryEntity.id.in(ids));
-    result += jpaQuery.update(queryEntity).set(queryEntity.action, CommonValues.ACTION_DELETED).where(whereBuilder).execute();
+	/**
+	 * Updates an existing member.
+	 *
+	 * @param member the member entity with updated information
+	 * @return the updated member entity
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	public Member update(Member member) {
+		logger.debug("Updating member with ID: {}", member.getId());
+		return memberDao.save(member);
+	}
 
-    return result.intValue();
-  }
+	/**
+	 * Resets the password for a specific member.
+	 *
+	 * @param id          the ID of the member
+	 * @param newPassword the new password (already encoded)
+	 * @return the number of affected records (should be 1)
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	public int resetPassword(Long id, String newPassword) {
+		logger.debug("Resetting password for member ID: {}", id);
 
-  @Transactional(transactionManager = "transactionManager", rollbackFor = Exception.class)
-  public int remove(Long id) {
-    QMember queryEntity = QMember.member;
-    BooleanBuilder whereBuilder = new BooleanBuilder();
-    whereBuilder.and(queryEntity.id.eq(id));
-    Long result = jpaQuery.update(queryEntity).set(queryEntity.orgId, 0l).set(queryEntity.orgType, (short) 13).where(whereBuilder).execute();
+		QMember member = QMember.member;
+		BooleanBuilder whereClause = new BooleanBuilder();
+		whereClause.and(member.id.eq(id));
 
-    return result.intValue();
-  }
+		long result = jpaQuery.update(member).set(member.password, newPassword).where(whereClause).execute();
 
-  @Override
-  public Member load(Long id) {
-    return memberDao.findById(id).get();
-  }
+		logger.info("Password reset for member ID: {}. Affected records: {}", id, result);
+		return (int) result;
+	}
 
-  public JPAQuery<Member> searchCondition(MemberDto dto) {
-    QMember queryEntity = QMember.member;
-    BooleanBuilder whereBuilder = new BooleanBuilder();
-    whereBuilder.and(queryEntity.action.lt(CommonValues.ACTION_DELETED));
+	/**
+	 * Soft deletes multiple members by marking them as deleted. Physically deletes
+	 * members that are already marked as deleted.
+	 *
+	 * @param ids the list of member IDs to delete
+	 * @return the total number of affected records
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	public int delete(List<Long> ids) {
+		logger.debug("Deleting members with IDs: {}", ids);
 
-    if (dto.getId() != null)
-      whereBuilder.and(queryEntity.id.eq(dto.getId()));
+		QMember member = QMember.member;
+		BooleanBuilder whereClause = new BooleanBuilder();
+		whereClause.and(member.id.in(ids));
 
-    if (dto.getOrgId() != null)
-      whereBuilder.and(queryEntity.orgId.eq(dto.getOrgId()));
+		// First physically delete already soft-deleted records
+		BooleanBuilder softDeletedClause = new BooleanBuilder(whereClause);
+		softDeletedClause.and(member.status.eq(CommonValues.ACTION_DELETED));
 
-    if (dto.getOrgType() != null && (dto.getOrgType() != null))
-      whereBuilder.and(queryEntity.orgType.eq(dto.getOrgType()));
+		long physicalDeletes = jpaQuery.delete(member).where(softDeletedClause).execute();
 
-    if (dto.getStatus() != null && (dto.getStatus() != null))
-      whereBuilder.and(queryEntity.status.eq(dto.getStatus()));
+		// Then soft delete the remaining records
+		long softDeletes = jpaQuery.update(member).set(member.action, CommonValues.ACTION_DELETED).where(whereClause)
+				.execute();
 
-    if (!StringUtils.isBlank(dto.getNickName()))
-      whereBuilder.and(queryEntity.nickName.contains(dto.getNickName()));
+		int totalDeletes = (int) (physicalDeletes + softDeletes);
+		logger.info("Deleted {} members. Physical: {}, Soft: {}", totalDeletes, physicalDeletes, softDeletes);
+		return totalDeletes;
+	}
 
-    if (!StringUtils.isBlank(dto.getLoginName()))
-      whereBuilder.and(queryEntity.loginName.contains(dto.getLoginName()));
+	/**
+	 * Removes a member from their organization by resetting orgId and orgType.
+	 *
+	 * @param id the ID of the member to remove
+	 * @return the number of affected records (should be 1)
+	 */
+	@Transactional(rollbackFor = Exception.class)
+	public int remove(Long id) {
+		logger.debug("Removing member with ID: {} from organization", id);
 
-    if (!StringUtils.isBlank(dto.getPhone()))
-      whereBuilder.and(queryEntity.phone.contains(dto.getPhone()));
+		QMember member = QMember.member;
+		BooleanBuilder whereClause = new BooleanBuilder();
+		whereClause.and(member.id.eq(id));
 
-    if (!StringUtils.isBlank(dto.getEmail()))
-      whereBuilder.and(queryEntity.email.contains(dto.getEmail()));
+		long result = jpaQuery.update(member).set(member.orgId, 0L).set(member.orgType, (short) 13).where(whereClause)
+				.execute();
 
-    if (dto.getCreateTime() != null)
-      whereBuilder.and(queryEntity.createTime.gt(DateUtil.getDatePart(dto.getCreateTime())));
+		logger.info("Removed member with ID: {} from organization. Affected records: {}", id, result);
+		return (int) result;
+	}
 
-    if (dto.getCreateTime2() != null)
-      whereBuilder.and(queryEntity.createTime.lt(DateUtil.getNextDatePart(dto.getCreateTime2())));
+	/**
+	 * Retrieves a member by their ID.
+	 *
+	 * @param id the ID of the member to retrieve
+	 * @return the member entity
+	 */
+	@Override
+	public Member load(Long id) {
+		logger.debug("Loading member with ID: {}", id);
+		return memberDao.findById(id).orElse(null);
+	}
 
-    LOG.debug("whereBuilder: {}", whereBuilder);
-    return jpaQuery.select(queryEntity).from(queryEntity).where(whereBuilder);
-  }
+	/**
+	 * Builds a query with conditions based on the provided MemberDto.
+	 *
+	 * @param dto the search criteria
+	 * @return a JPAQuery with applied conditions
+	 */
+	public JPAQuery<Member> searchCondition(MemberDto dto) {
+		QMember member = QMember.member;
+		BooleanBuilder whereClause = new BooleanBuilder();
+		whereClause.and(member.action.lt(CommonValues.ACTION_DELETED));
 
-  public int searchCount(MemberDto dto) {
+		// Apply filters based on provided criteria
+		if (dto.getId() != null) {
+			whereClause.and(member.id.eq(dto.getId()));
+		}
 
-    return (int) searchCondition(dto).fetch().size();
-  }
+		if (dto.getOrgId() != null) {
+			whereClause.and(member.orgId.eq(dto.getOrgId()));
+		}
 
-  public List<Member> searchResult(MemberDto dto) {
-    List<Member> resultList = null;
-    if (dto.getPageNo() == null)
-      resultList = searchCondition(dto).fetch();
-    else {
-      resultList = searchCondition(dto).offset(dto.getPageSize() * (dto.getPageNo() - 1)).limit(dto.getPageSize()).fetch();
-    }
+		if (dto.getOrgType() != null) {
+			whereClause.and(member.orgType.eq(dto.getOrgType()));
+		}
 
-    return resultList;
-  }
+		if (dto.getStatus() != null) {
+			whereClause.and(member.status.eq(dto.getStatus()));
+		}
 
-  public Member login(String loginName, Long weId) {
-    LOG.debug("loginName: {}", loginName);
-    LOG.debug("weId: {}", weId);
-    QMember queryEntity = QMember.member;
-    BooleanBuilder whereBuilder = new BooleanBuilder();
-    BooleanBuilder whereBuilder2 = new BooleanBuilder();
-    whereBuilder.and(queryEntity.action.lt(CommonValues.ACTION_DELETED));
-    whereBuilder2.or(queryEntity.loginName.eq(loginName));
-    whereBuilder2.or(queryEntity.phone.eq(loginName));
-    whereBuilder2.or(queryEntity.email.eq(loginName));
-    whereBuilder.and(whereBuilder2);
-    if (weId != null && weId != CommonValues.NUM_LONG_ZERO) {
-      whereBuilder.and(queryEntity.weId.eq(weId));
-    }
+		if (StringUtils.isNotBlank(dto.getNickName())) {
+			whereClause.and(member.nickName.containsIgnoreCase(dto.getNickName()));
+		}
 
-    List<Member> matchMembers = jpaQuery.select(queryEntity).from(queryEntity).where(whereBuilder).fetch();
+		if (StringUtils.isNotBlank(dto.getLoginName())) {
+			whereClause.and(member.loginName.containsIgnoreCase(dto.getLoginName()));
+		}
 
-    if (matchMembers.size() > 0) {
-      return matchMembers.get(0);
-    }
+		if (StringUtils.isNotBlank(dto.getPhone())) {
+			whereClause.and(member.phone.containsIgnoreCase(dto.getPhone()));
+		}
 
-    LOG.debug("matchMembers size is: {}", matchMembers.size());
+		if (StringUtils.isNotBlank(dto.getEmail())) {
+			whereClause.and(member.email.containsIgnoreCase(dto.getEmail()));
+		}
 
-    return null;
-  }
+		if (dto.getCreateTime() != null) {
+			whereClause.and(member.createTime.after(DateUtil.getDatePart(dto.getCreateTime())));
+		}
+
+		if (dto.getCreateTime2() != null) {
+			whereClause.and(member.createTime.before(DateUtil.getNextDatePart(dto.getCreateTime2())));
+		}
+
+		logger.debug("Built search query with conditions: {}", whereClause);
+		return jpaQuery.selectFrom(member).where(whereClause);
+	}
+
+	/**
+	 * Counts members matching the search criteria.
+	 *
+	 * @param dto the search criteria
+	 * @return the number of matching members
+	 */
+	public int searchCount(MemberDto dto) {
+		logger.debug("Counting members with criteria: {}", dto);
+		long count = searchCondition(dto).fetchCount();
+		logger.debug("Found {} members matching criteria", count);
+		return (int) count;
+	}
+
+	/**
+	 * Searches for members based on criteria with pagination support.
+	 *
+	 * @param dto the search criteria including pagination parameters
+	 * @return a list of matching members
+	 */
+	public List<Member> searchResult(MemberDto dto) {
+		logger.debug("Searching members with criteria: {}", dto);
+
+		JPAQuery<Member> query = searchCondition(dto);
+
+		// Apply pagination if requested
+		if (dto.getPageNo() != null && dto.getPageSize() != null) {
+			int offset = dto.getPageSize() * (dto.getPageNo() - 1);
+			query.offset(offset).limit(dto.getPageSize());
+		}
+
+		// Apply sorting if specified
+		if (dto.getSortBy() != null) {
+			applySorting(query, dto.getSortBy(), dto.isAscending());
+		}
+
+		List<Member> results = query.fetch();
+		logger.debug("Found {} members matching search criteria", results.size());
+		return results;
+	}
+
+	/**
+	 * Searches for members with pagination support and returns a Page object.
+	 *
+	 * @param dto the search criteria including pagination parameters
+	 * @return a Page of matching members
+	 */
+	public Page<Member> search(MemberDto dto) {
+		logger.debug("Searching members with pagination, criteria: {}", dto);
+
+		JPAQuery<Member> query = searchCondition(dto);
+		long total = query.fetchCount();
+
+		// Apply pagination
+		if (dto.getPageNo() != null && dto.getPageSize() != null) {
+			int offset = dto.getPageSize() * (dto.getPageNo() - 1);
+			query.offset(offset).limit(dto.getPageSize());
+		}
+
+		// Apply sorting if specified
+		if (dto.getSortBy() != null) {
+			applySorting(query, dto.getSortBy(), dto.isAscending());
+		}
+
+		List<Member> content = query.fetch();
+
+		Pageable pageable = org.springframework.data.domain.PageRequest.of(
+				dto.getPageNo() != null ? dto.getPageNo() - 1 : 0,
+				dto.getPageSize() != null ? dto.getPageSize() : Integer.MAX_VALUE);
+
+		logger.debug("Found {} members out of {} total", content.size(), total);
+		return new PageImpl<>(content, pageable, total);
+	}
+
+	/**
+	 * Authenticates a member by login name and optional WeId.
+	 *
+	 * @param loginName the login name, phone, or email
+	 * @param weId      the optional WeId
+	 * @return the authenticated member or null if not found
+	 */
+	public Member login(String loginName, Long weId) {
+		logger.debug("Attempting login for: {}, weId: {}", loginName, weId);
+
+		QMember member = QMember.member;
+		BooleanBuilder whereClause = new BooleanBuilder();
+		whereClause.and(member.action.lt(CommonValues.ACTION_DELETED));
+
+		// Search by login name, phone, or email
+		BooleanBuilder loginCondition = new BooleanBuilder();
+		loginCondition.or(member.loginName.equalsIgnoreCase(loginName)).or(member.phone.equalsIgnoreCase(loginName))
+				.or(member.email.equalsIgnoreCase(loginName));
+
+		whereClause.and(loginCondition);
+
+		// Add WeId condition if provided
+		if (weId != null && !weId.equals(CommonValues.NUM_LONG_ZERO)) {
+			whereClause.and(member.weId.eq(weId));
+		}
+
+		List<Member> matchingMembers = jpaQuery.selectFrom(member).where(whereClause).fetch();
+
+		if (matchingMembers.isEmpty()) {
+			logger.warn("Login failed for: {}. No matching member found", loginName);
+			return null;
+		}
+
+		if (matchingMembers.size() > 1) {
+			logger.warn("Login ambiguous for: {}. Found {} matching members", loginName, matchingMembers.size());
+		}
+
+		logger.info("Login successful for: {}", loginName);
+		return matchingMembers.get(0);
+	}
+
+	/**
+	 * Resets WeId for any existing members with the specified WeId.
+	 *
+	 * @param weId the WeId to reset
+	 */
+	private void resetWeIdForExistingMembers(Long weId) {
+		QMember member = QMember.member;
+		BooleanBuilder whereClause = new BooleanBuilder();
+		whereClause.and(member.weId.eq(weId));
+
+		long updatedCount = jpaQuery.update(member).set(member.weId, 0L).where(whereClause).execute();
+
+		if (updatedCount > 0) {
+			logger.info("Reset WeId for {} existing members with WeId: {}", updatedCount, weId);
+		}
+	}
+
+	/**
+	 * Assigns default permissions to a new member.
+	 *
+	 * @param member the member to assign permissions to
+	 */
+	private void assignDefaultPermissions(Member member) {
+		DefaultPermissionDto dto = new DefaultPermissionDto();
+		dto.setOrgType(CommonValues.ORG_TYPE_MB);
+
+		List<DefaultPermission> defaultPermissions = defaultPermissionService.search(dto);
+
+		for (DefaultPermission defaultPermission : defaultPermissions) {
+			SubjectPermission memberPermission = new SubjectPermission();
+			memberPermission.setId(idGenerator.genId());
+			memberPermission.setOrgType(CommonValues.ORG_TYPE_MB);
+			memberPermission.setUserId(member.getId());
+			memberPermission.setPermissionId(defaultPermission.getId());
+
+			subjectPermissionService.save(memberPermission);
+		}
+
+		logger.debug("Assigned {} default permissions to member ID: {}", defaultPermissions.size(), member.getId());
+	}
+
+	/**
+	 * Applies sorting to the query based on the specified field bitmask and
+	 * direction.
+	 *
+	 * @param query     the query to apply sorting to
+	 * @param sortBy    the bitmask representing which columns to sort by
+	 * @param ascending true for ascending order, false for descending
+	 */
+	private void applySorting(JPAQuery<Member> query, int sortBy, boolean ascending) {
+		QMember member = QMember.member;
+		List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
+		Order order = ascending ? Order.ASC : Order.DESC;
+
+		// Apply sorting based on bitmask
+		if ((sortBy & SORT_BY_ID) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.id));
+		}
+
+		if ((sortBy & SORT_BY_LOGIN_NAME) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.loginName));
+		}
+
+		if ((sortBy & SORT_BY_NICK_NAME) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.nickName));
+		}
+
+		if ((sortBy & SORT_BY_CREATE_TIME) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.createTime));
+		}
+
+		if ((sortBy & SORT_BY_ORG_ID) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.orgId));
+		}
+
+		if ((sortBy & SORT_BY_ORG_TYPE) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.orgType));
+		}
+
+		if ((sortBy & SORT_BY_EMAIL) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.email));
+		}
+
+		if ((sortBy & SORT_BY_PHONE) != 0) {
+			orderSpecifiers.add(new OrderSpecifier<>(order, member.phone));
+		}
+
+		// Apply all sorting criteria
+		if (!orderSpecifiers.isEmpty()) {
+			query.orderBy(orderSpecifiers.toArray(new OrderSpecifier[0]));
+		}
+	}
 }
