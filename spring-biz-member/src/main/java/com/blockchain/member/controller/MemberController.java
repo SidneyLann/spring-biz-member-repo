@@ -236,7 +236,7 @@ public class MemberController extends DataBaseController {
 	 * @param ids         the list of member IDs to delete
 	 * @return ResponseEntity with operation result and count of deleted records
 	 */
-	@DeleteMapping(value = MemberPaths.MEMBER_DELETE, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(value = MemberPaths.MEMBER_DELETE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public OpResult deleteMembers(@RequestHeader(required = false) Long memberId,
 			@RequestHeader(required = false) Long orgId, @RequestHeader(required = false) Short orgType,
 			@RequestHeader(required = false) String authorities, @RequestBody List<Long> ids) {
@@ -274,7 +274,7 @@ public class MemberController extends DataBaseController {
 	 * @param id          the ID of the member to remove from the organization
 	 * @return ResponseEntity with operation result and count of removed records
 	 */
-	@DeleteMapping(MemberPaths.MEMBER_ORG_DELETE)
+	@PostMapping(MemberPaths.MEMBER_ORG_DELETE)
 	public OpResult removeMemberFromOrganization(@RequestHeader(required = false) Long memberId,
 			@RequestHeader(required = false) Long orgId, @RequestHeader(required = false) Short orgType,
 			@RequestHeader(required = false) String authorities, @RequestParam @NotNull Long id) {
@@ -433,8 +433,8 @@ public class MemberController extends DataBaseController {
 	 * @param id the ID of the member to retrieve
 	 * @return ResponseEntity with operation result and member data
 	 */
-	@GetMapping(MemberPaths.MEMBER_LOAD + "/{id}")
-	public OpResult loadMember(@PathVariable Long id) {
+	@PostMapping(MemberPaths.MEMBER_LOAD)
+	public OpResult loadMember(@RequestParam Long id) {
 		logger.debug("Loading member with ID: {}", id);
 
 		OpResult opResult = new OpResult();
