@@ -24,8 +24,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -87,12 +89,15 @@ public class MemberController extends DataBaseController {
 	private static final int IMAGE_VALIDATION_THRESHOLD = 5;
 
 	@Resource
+	private ModelMapper modelMapper;
+
+	@Resource
 	private MemberService memberService;
 
 	@Resource
 	private CacheClient cacheClient;
 
-	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(PASSWORD_ENCODING_STRENGTH);
+	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(PASSWORD_ENCODING_STRENGTH);
 
 	/**
 	 * Initializes member field and form configurations for UI rendering.
@@ -140,12 +145,13 @@ public class MemberController extends DataBaseController {
 	 */
 	@PostMapping(value = MemberPaths.MEMBER_CREATE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public OpResult createMember(@RequestHeader(value = "weToken", required = false) String weToken,
-			@RequestBody Member member) {
+			@RequestBody MemberDto memberDto) {
 
-		logger.debug("Creating new member with loginName: {}", member.getLoginName());
+		logger.debug("Creating new member with loginName: {}", memberDto.getLoginName());
 
 		OpResult opResult = new OpResult();
 		try {
+			Member member = modelMapper.map(memberDto, Member.class);
 			// Token validation
 			String weTokenCache = cacheClient.getString("weToken-" + member.getWeId());
 			String smsCodeCache = cacheClient.getString("register-" + member.getLoginName());
@@ -190,9 +196,9 @@ public class MemberController extends DataBaseController {
 	@PutMapping(value = MemberPaths.MEMBER_UPDATE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	public OpResult updateMember(@RequestHeader(required = false) Long memberId,
 			@RequestHeader(required = false) Long orgId, @RequestHeader(required = false) Short orgType,
-			@RequestHeader(required = false) String authorities, @RequestBody Member member) {
+			@RequestHeader(required = false) String authorities, @RequestBody MemberDto memberDto) {
 
-		logger.debug("Updating member with ID: {}", member.getId());
+		logger.debug("Updating member with ID: {}", memberDto.getId());
 
 		OpResult opResult = new OpResult();
 		try {
@@ -202,6 +208,7 @@ public class MemberController extends DataBaseController {
 				return opResult;
 			}
 
+			Member member = modelMapper.map(memberDto, Member.class);
 			if (member.getPassword().length() < PASSWORD_ENCODING_STRENGTH + 8) {
 				member.setPassword(passwordEncoder.encode(member.getPassword()));
 			}
@@ -407,8 +414,8 @@ public class MemberController extends DataBaseController {
 					user.getId());
 
 			// Clear sensitive information before returning
-			user.setPassword(null);
-			opResult.setBody(user);
+			MemberDto memberDto = modelMapper.map(user, MemberDto.class);
+			opResult.setBody(memberDto);
 			opResult.setCode(OpResult.CODE_COMM_0_SUCCESS);
 
 			logger.info("Login successful for memberId: {}", user.getId());
@@ -434,8 +441,8 @@ public class MemberController extends DataBaseController {
 		try {
 			Member member = memberService.load(id);
 			// Clear sensitive information
-			member.setPassword(null);
-			opResult.setBody(member);
+			MemberDto memberDto = modelMapper.map(member, MemberDto.class);
+			opResult.setBody(memberDto);
 			opResult.setCode(OpResult.CODE_COMM_0_SUCCESS);
 
 		} catch (Exception e) {
@@ -467,8 +474,11 @@ public class MemberController extends DataBaseController {
 			if (dto.getPageNo() != null) {
 				opResult.setTotalRecords(memberService.searchCount(dto));
 			}
+			List<Member> members = memberService.searchResult(dto);
+			List<MemberDto> responseDtos = members.stream()
+					.map(userEntity -> modelMapper.map(userEntity, MemberDto.class)).collect(Collectors.toList());
 
-			opResult.setBody(memberService.searchResult(dto));
+			opResult.setBody(responseDtos);
 			opResult.setCode(OpResult.CODE_COMM_0_SUCCESS);
 
 		} catch (Exception e) {

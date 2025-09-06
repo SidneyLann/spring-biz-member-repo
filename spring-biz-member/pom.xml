@@ -65,6 +65,16 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>com.github.rozidan</groupId>
+			<artifactId>modelmapper-spring-boot-starter</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.8.9</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
 			<exclusions>
@@ -259,7 +269,7 @@
 
 	<build>
 		<finalName>${project.artifactId}</finalName>
-		
+
 		<plugins>
 			<plugin>
 				<groupId>com.querydsl</groupId>
@@ -312,9 +322,9 @@
 				<configuration>
 					<encoding>UTF-8</encoding>
 					<parameters>true</parameters>
-        <compilerArgs>--enable-preview</compilerArgs>
-        <!-- For Java 16+ only: add release flag instead of source/target -->
-        <release>${java.version}</release>
+					<compilerArgs>--enable-preview</compilerArgs>
+					<!-- For Java 16+ only: add release flag instead of source/target -->
+					<release>${java.version}</release>
 					<!--compilerArgument>-proc:only</compilerArgument -->
 					<annotationProcessorPaths>
 						<path>
