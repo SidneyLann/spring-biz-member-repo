@@ -73,7 +73,6 @@ public class MemberService extends DataBaseService implements IBaseService<Membe
 	public static final int SORT_BY_ORG_TYPE = 32;
 	public static final int SORT_BY_EMAIL = 64;
 	public static final int SORT_BY_PHONE = 128;
-
 	@Resource
 	private MemberDao memberDao;
 
