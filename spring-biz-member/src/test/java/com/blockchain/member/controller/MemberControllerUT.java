@@ -34,7 +34,7 @@ import com.blockchain.member.entity.Member;
 import com.blockchain.member.service.MemberService;
 
 @ExtendWith(MockitoExtension.class)
-class MemberControllerTest {
+class MemberControllerUT {
 
     @Mock
     private ModelMapper modelMapper;

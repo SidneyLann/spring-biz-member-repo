@@ -52,6 +52,8 @@ public class MemberDto extends BaseDto {
 
   private Long receiptMemId;
 
+  private String smsCode;
+  
   public String getLoginName() {
     return loginName;
   }
@@ -235,5 +237,13 @@ public class MemberDto extends BaseDto {
   public void setReceiptMemId(Long receiptMemId) {
     this.receiptMemId = receiptMemId;
   }
+
+public String getSmsCode() {
+	return smsCode;
+}
+
+public void setSmsCode(String smsCode) {
+	this.smsCode = smsCode;
+}
   
 }
