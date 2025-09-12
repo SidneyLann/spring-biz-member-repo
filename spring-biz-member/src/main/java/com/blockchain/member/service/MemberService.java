@@ -288,8 +288,8 @@ public class MemberService extends DataBaseService implements IBaseService<Membe
 		}
 
 		// Apply sorting if specified
-		if (dto.getSortBy() != null) {
-			applySorting(query, dto.getSortBy(), dto.isAscending());
+		if (dto.getSorting() != null) {
+			applySorting(query, dto.getSorting(), true);
 		}
 
 		List<Member> results = query.fetch();
@@ -316,8 +316,8 @@ public class MemberService extends DataBaseService implements IBaseService<Membe
 		}
 
 		// Apply sorting if specified
-		if (dto.getSortBy() != null) {
-			applySorting(query, dto.getSortBy(), dto.isAscending());
+		if (dto.getSorting() != null) {
+			applySorting(query, dto.getSorting(), true);
 		}
 
 		List<Member> content = query.fetch();
