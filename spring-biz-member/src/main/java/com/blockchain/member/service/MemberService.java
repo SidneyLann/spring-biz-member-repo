@@ -61,7 +61,6 @@ import jakarta.annotation.Resource;
 @Service
 @Transactional(readOnly = true)
 public class MemberService extends DataBaseService implements IBaseService<Member, Long> {
-
 	private static final Logger logger = LoggerFactory.getLogger(MemberService.class);
 
 	// Sort column constants (using bitmask values)
@@ -73,6 +72,7 @@ public class MemberService extends DataBaseService implements IBaseService<Membe
 	public static final int SORT_BY_ORG_TYPE = 32;
 	public static final int SORT_BY_EMAIL = 64;
 	public static final int SORT_BY_PHONE = 128;
+	
 	@Resource
 	private MemberDao memberDao;
 

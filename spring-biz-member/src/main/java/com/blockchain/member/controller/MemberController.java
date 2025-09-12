@@ -33,9 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -151,7 +149,9 @@ public class MemberController extends DataBaseController {
 
 		OpResult opResult = new OpResult();
 		try {
+			// map dto to entity
 			Member member = modelMapper.map(memberDto, Member.class);
+			
 			// Token validation
 			String weTokenCache = cacheClient.getString("weToken-" + member.getWeId());
 			String smsCodeCache = cacheClient.getString("register-" + member.getLoginName());
@@ -474,7 +474,10 @@ public class MemberController extends DataBaseController {
 			if (dto.getPageNo() != null) {
 				opResult.setTotalRecords(memberService.searchCount(dto));
 			}
+			
 			List<Member> members = memberService.searchResult(dto);
+			
+			// map entity to dto
 			List<MemberDto> responseDtos = members.stream()
 					.map(userEntity -> modelMapper.map(userEntity, MemberDto.class)).collect(Collectors.toList());
 
