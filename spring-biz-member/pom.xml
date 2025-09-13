@@ -363,7 +363,6 @@
 							<version>5.1.0</version>
 							<classifier>jakarta</classifier>
 						</path>
-						<!-- Add this if using JPA annotations -->
 						<path>
 							<groupId>jakarta.persistence</groupId>
 							<artifactId>jakarta.persistence-api</artifactId>
