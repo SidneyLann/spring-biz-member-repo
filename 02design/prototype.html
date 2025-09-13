@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Member Portal</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --success-color: #27ae60;
+            --border-radius: 6px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="tel"],
+        input[type="date"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .form-section {
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        .optional {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .error-message {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .success-message {
+            color: var(--success-color);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .sms-code-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .sms-code-group input {
+            flex: 1;
+        }
+        
+        .sms-code-group button {
+            width: auto;
+            white-space: nowrap;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 1.5rem;
+            }
+            
+            .tab {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">Blockchain Member Portal</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Login</div>
+                <div class="tab" data-tab="register">Register</div>
+            </div>
+            
+            <div class="form-container">
+                <!-- Login Form -->
+                <div class="form-section active" id="login-form">
+                    <h2>Member Login</h2>
+                    <p>Access your member account</p>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginName">Login Name</label>
+                            <input type="text" id="loginName" name="loginName" required>
+                            <div class="error-message" id="loginNameError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                            <div class="error-message" id="passwordError"></div>
+                        </div>
+                        
+                        <button type="submit">Login</button>
+                        
+                        <div class="error-message mt-2" id="loginError"></div>
+                        <div class="success-message mt-2" id="loginSuccess"></div>
+                    </form>
+                </div>
+                
+                <!-- Registration Form -->
+                <div class="form-section" id="register-form">
+                    <h2>Create Member Account</h2>
+                    <p>Join our blockchain member community</p>
+                    
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="regLoginName">Mobile Number</label>
+                            <input type="tel" id="regLoginName" name="loginName" required>
+                            <div class="error-message" id="regLoginNameError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="regPassword">Password</label>
+                            <input type="password" id="regPassword" name="password" required>
+                            <div class="error-message" id="regPasswordError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <div class="error-message" id="confirmPasswordError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="smsCode">SMS Verification Code</label>
+                            <div class="sms-code-group">
+                                <input type="text" id="smsCode" name="smsCode" required>
+                                <button type="button" id="sendSmsBtn">Send Code</button>
+                            </div>
+                            <div class="error-message" id="smsCodeError"></div>
+                        </div>
+                        
+                        <button type="submit">Register</button>
+                        
+                        <div class="error-message mt-2" id="registerError"></div>
+                        <div class="success-message mt-2" id="registerSuccess"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>© 2025 Blockchain Team. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding form
+                const tabName = tab.getAttribute('data-tab');
+                document.querySelectorAll('.form-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(`${tabName}-form`).classList.add('active');
+            });
+        });
+        
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Reset error messages
+            document.querySelectorAll('.error-message, .success-message').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Basic validation
+            const loginName = document.getElementById('loginName').value;
+            const password = document.getElementById('password').value;
+            
+            if (!loginName) {
+                document.getElementById('loginNameError').textContent = 'Login name is required';
+                document.getElementById('loginNameError').style.display = 'block';
+                return;
+            }
+            
+            if (!password) {
+                document.getElementById('passwordError').textContent = 'Password is required';
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+            
+            // Simulate API call
+            simulateLogin(loginName, password);
+        });
+        
+        // Registration form submission
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Reset error messages
+            document.querySelectorAll('.error-message, .success-message').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Basic validation
+            const loginName = document.getElementById('regLoginName').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const smsCode = document.getElementById('smsCode').value;
+            
+            if (!loginName) {
+                document.getElementById('regLoginNameError').textContent = 'Mobile number is required';
+                document.getElementById('regLoginNameError').style.display = 'block';
+                return;
+            }
+            
+            if (!password) {
+                document.getElementById('regPasswordError').textContent = 'Password is required';
+                document.getElementById('regPasswordError').style.display = 'block';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPasswordError').textContent = 'Passwords do not match';
+                document.getElementById('confirmPasswordError').style.display = 'block';
+                return;
+            }
+            
+            if (!smsCode) {
+                document.getElementById('smsCodeError').textContent = 'SMS verification code is required';
+                document.getElementById('smsCodeError').style.display = 'block';
+                return;
+            }
+            
+            // Simulate API call
+            simulateRegistration(loginName, password, smsCode);
+        });
+        
+        // Send SMS code button
+        document.getElementById('sendSmsBtn').addEventListener('click', function() {
+            const loginName = document.getElementById('regLoginName').value;
+            
+            if (!loginName) {
+                document.getElementById('regLoginNameError').textContent = 'Mobile number is required to send verification code';
+                document.getElementById('regLoginNameError').style.display = 'block';
+                return;
+            }
+            
+            // Simulate sending SMS code
+            this.disabled = true;
+            this.textContent = 'Sending...';
+            
+            setTimeout(() => {
+                this.disabled = false;
+                this.textContent = 'Send Code';
+                
+                // Show success message (in a real app, this would come from the API response)
+                document.getElementById('registerSuccess').textContent = 'Verification code sent to your mobile';
+                document.getElementById('registerSuccess').style.display = 'block';
+                
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('registerSuccess').style.display = 'none';
+                }, 3000);
+            }, 1500);
+        });
+        
+        // Simulate login API call
+        function simulateLogin(loginName, password) {
+            // Show loading state
+            const submitBtn = document.querySelector('#loginForm button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Logging in...';
+            submitBtn.disabled = true;
+            
+            // Simulate API delay
+            setTimeout(() => {
+                // In a real application, this would be an actual API call to the backend
+                // For demonstration purposes, we're simulating a successful login
+                
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
+                document.getElementById('loginSuccess').textContent = 'Login successful! Redirecting...';
+                document.getElementById('loginSuccess').style.display = 'block';
+                
+                // In a real application, you would redirect or update the UI based on the response
+                setTimeout(() => {
+                    alert('Login simulation successful! In a real application, you would be redirected to your dashboard.');
+                }, 1000);
+                
+            }, 1500);
+        }
+        
+        // Simulate registration API call
+        function simulateRegistration(loginName, password, smsCode) {
+            // Show loading state
+            const submitBtn = document.querySelector('#registerForm button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Registering...';
+            submitBtn.disabled = true;
+            
+            // Simulate API delay
+            setTimeout(() => {
+                // In a real application, this would be an actual API call to the backend
+                // For demonstration purposes, we're simulating a successful registration
+                
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                
+                document.getElementById('registerSuccess').textContent = 'Registration successful! You can now login.';
+                document.getElementById('registerSuccess').style.display = 'block';
+                
+                // Switch to login tab after successful registration
+                setTimeout(() => {
+                    document.querySelector('.tab[data-tab="login"]').click();
+                }, 2000);
+                
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

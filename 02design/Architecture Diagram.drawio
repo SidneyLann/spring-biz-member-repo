@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36" version="28.2.1">
+  <diagram name="Page-1" id="uPS2wIa5Pphe6PHB9VIB">
+    <mxGraphModel dx="872" dy="439" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="71tc0wAeGjiytHJ5F2LD-1" value="" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.database;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="480" y="1050" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="71tc0wAeGjiytHJ5F2LD-6" value="data storage" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="430" y="960" width="390" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="71tc0wAeGjiytHJ5F2LD-7" value="Container" style="swimlane;" vertex="1" parent="1">
+          <mxGeometry x="70" y="960" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="71tc0wAeGjiytHJ5F2LD-8" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;flowAnimation=1;" edge="1" parent="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="270" y="1050" as="sourcePoint" />
+            <mxPoint x="430" y="1050" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
