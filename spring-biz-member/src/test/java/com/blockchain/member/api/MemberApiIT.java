@@ -1,4 +1,4 @@
-package com.blockchain.member.all;
+package com.blockchain.member.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,7 +24,7 @@ import jakarta.transaction.Transactional;
 @AutoConfigureMockMvc // Automatically configures MockMvc
 @ActiveProfiles("test") // Use a 'test' profile to configure an H2 database
 @Transactional // Rolls back the test data after the test
-public class MemberEntireStackIT {
+public class MemberApiIT {
 
 	@Autowired
 	private MockMvc mockMvc;
