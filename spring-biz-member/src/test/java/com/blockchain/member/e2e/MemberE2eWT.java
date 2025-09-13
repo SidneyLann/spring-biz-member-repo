@@ -57,11 +57,11 @@ public class MemberE2eWT {
     // This is our test case
     @Test
     public void testGoogleSearch() {
-        // 1. Navigate to Google
-        driver.get("https://www.google.com");
+        // 1. Navigate to website
+        driver.get("sh1.koreacentral.cloudapp.azure.com");
 
         // 2. Find the search box element by its HTML name attribute
-        WebElement searchBox = driver.findElement(By.name("q"));
+        WebElement searchBox = driver.findElement(By.name("search"));
 
         // 3. Type "Selenium Java" into the search box and press ENTER
         searchBox.sendKeys("Selenium Java" + Keys.ENTER);
