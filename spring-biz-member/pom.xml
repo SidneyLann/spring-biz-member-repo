@@ -182,11 +182,12 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid-spring-boot-starter</artifactId>
-			<version>1.2.6</version>
+			<version>1.2.23</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.mysql</groupId>
@@ -286,6 +287,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.curator</groupId>
+			<artifactId>curator-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
 		</dependency>
@@ -330,7 +336,6 @@
 							</sources>
 						</configuration>
 					</execution>
-					<!-- Add annotation-generated sources -->
 					<execution>
 						<id>add-apt-sources</id>
 						<phase>generate-sources</phase>
@@ -339,10 +344,21 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>${project.build.directory}/generated-sources/jpa</source>
+								<source>${project.build.directory}/generated-sources</source>
 							</sources>
 						</configuration>
-					</execution>
+					</execution> <execution>
+                    <id>add-test-generated-sources</id>
+                    <phase>generate-test-sources</phase>
+                    <goals>
+                        <goal>add-test-source</goal>
+                    </goals>
+                    <configuration>
+                        <sources>
+                            <source>${project.build.directory}/generated-test-sources</source>
+                        </sources>
+                    </configuration>
+                </execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -353,7 +369,6 @@
 					<encoding>UTF-8</encoding>
 					<parameters>true</parameters>
 					<compilerArgs>--enable-preview</compilerArgs>
-					<!-- For Java 16+ only: add release flag instead of source/target -->
 					<release>${java.version}</release>
 					<!--compilerArgument>-proc:only</compilerArgument -->
 					<annotationProcessorPaths>
@@ -372,8 +387,31 @@
 					<annotationProcessors>
 						<annotationProcessor>com.querydsl.apt.jpa.JPAAnnotationProcessor</annotationProcessor>
 					</annotationProcessors>
-					<generatedSourcesDirectory>${project.build.directory}/generated-sources/jpa</generatedSourcesDirectory>
-				</configuration>
+					<generatedSourcesDirectory>${project.build.directory}/generated-sources</generatedSourcesDirectory>
+				</configuration> <executions>
+                <execution>
+                    <id>test-compile</id>
+                    <phase>test-compile</phase>
+                    <goals>
+                        <goal>testCompile</goal>
+                    </goals>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>com.querydsl</groupId>
+                                <artifactId>querydsl-apt</artifactId>
+                                <version>5.1.0</version>
+                                <classifier>jakarta</classifier>
+                            </path>
+                            <path>
+                                <groupId>jakarta.persistence</groupId>
+                                <artifactId>jakarta.persistence-api</artifactId>
+                                <version>3.1.0</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </execution>
+            </executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -395,7 +433,19 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>3.3.2</version>
-			</plugin>
+			</plugin><plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>3.1.2</version>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>integration-test</goal>
+                        <goal>verify</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
 		</plugins>
 	</build>
 </project>

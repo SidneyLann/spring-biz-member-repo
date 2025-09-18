@@ -1,17 +1,23 @@
 package com.blockchain.member.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.blockchain.base.data.CacheClient;
 import com.blockchain.common.dto.member.MemberDto;
 import com.blockchain.common.path.MemberPaths;
 import com.blockchain.member.dao.MemberDao;
@@ -27,7 +33,16 @@ import jakarta.transaction.Transactional;
 public class MemberApiIT {
 
 	@Autowired
+	private ModelMapper modelMapper;
+
+	@Autowired
 	private MockMvc mockMvc;
+
+	@MockitoBean
+	private CacheClient cacheClient;
+
+	@MockitoBean
+	private PasswordEncoder passwordEncoder;
 
 	@Autowired
 	private MemberDao memberDao; // Real repository
@@ -37,10 +52,15 @@ public class MemberApiIT {
 
 	@Test
 	public void createMember_ShouldPersistToDatabase() throws Exception {
+
 		MemberDto memberDto = new MemberDto();
 		memberDto.setLoginName("testuser");
 		memberDto.setPassword("P@ssw0rd123");
 		memberDto.setSmsCode("123456");
+
+		when(cacheClient.getString("register-" + memberDto.getLoginName())).thenReturn(memberDto.getSmsCode());
+
+		when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
 		String requestBody = objectMapper.writeValueAsString(memberDto);
 

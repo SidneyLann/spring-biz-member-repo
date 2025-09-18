@@ -72,7 +72,7 @@ public class MemberService extends DataBaseService implements IBaseService<Membe
 	public static final int SORT_BY_ORG_TYPE = 32;
 	public static final int SORT_BY_EMAIL = 64;
 	public static final int SORT_BY_PHONE = 128;
-	
+
 	@Resource
 	private MemberDao memberDao;
 
@@ -95,14 +95,18 @@ public class MemberService extends DataBaseService implements IBaseService<Membe
 		logger.debug("Saving member with loginName: {}", member.getLoginName());
 
 		// Ensure WeId uniqueness
-		if (member.getWeId() != null) {
+		if (member.getWeId() != null && member.getWeId() != 0L) {
 			resetWeIdForExistingMembers(member.getWeId());
 		}
 
 		// Assign default permissions
 		assignDefaultPermissions(member);
 
-		return memberDao.save(member);
+		memberDao.save(member);
+
+		logger.debug("Saved member with loginName: {}", member.getLoginName());
+
+		return member;
 	}
 
 	/**
