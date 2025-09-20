@@ -404,6 +404,8 @@ public class MemberController extends DataBaseController {
 			if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
 				logger.warn("Login failed for loginName: {}", loginName);
 				opResult.setCode(OpResult.CODE_COMM_GRANT_INVALID_USER);
+
+				return opResult;
 			}
 
 			// Cache organization info

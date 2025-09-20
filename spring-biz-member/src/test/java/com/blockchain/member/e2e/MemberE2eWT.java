@@ -18,7 +18,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-// JUnit 5 Test Class
 public class MemberE2eWT {
 
     // Declare WebDriver instance
@@ -56,7 +55,7 @@ public class MemberE2eWT {
 
     // This is our test case
     @Test
-    public void testGoogleSearch() {
+    public void testLogin() {
         // 1. Navigate to website
         driver.get("sh1.koreacentral.cloudapp.azure.com");
 
